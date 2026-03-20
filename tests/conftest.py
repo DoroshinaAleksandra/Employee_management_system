@@ -1,5 +1,5 @@
 """
-Фикстуры для тестов системы управления сотрудниками.
+Fixtures for employee management system tests.
 """
 # pylint: disable=redefined-outer-name
 import pytest
@@ -14,23 +14,23 @@ from src.management_system.schemas import EmployeeCreate
 @pytest.fixture
 def db_session():
     """
-    Создаём тестовую базу данных в памяти (SQLite :memory:).
-    База создаётся заново для каждого теста и удаляется после.
+    Creates an in-memory test database (SQLite :memory:).
+    Database is recreated for each test and cleaned up afterwards.
     """
-    # Создаём движок БД в памяти (не на диске!)
+    # Create in-memory database engine
     engine = create_engine("sqlite:///:memory:", echo=False)
 
-    # Создаём все таблицы (employees)
+    # Create all tables (employees)
     Base.metadata.create_all(bind=engine)
 
-    # Создаём сессию для работы с БД
+    # Create session factory for database operations
     session_factory = sessionmaker(bind=engine)
     session = session_factory()
 
-    # Отдаём сессию тесту
+    # Yield session to the test
     yield session
 
-    # После теста закрываем сессию и удаляем БД
+    # After test: close session and dispose engine
     session.close()
     engine.dispose()
 
@@ -38,8 +38,8 @@ def db_session():
 @pytest.fixture
 def service(db_session):
     """
-    Создаёт EmployeeService для тестов.
-    Использует фикстуру db_session.
+    Creates EmployeeService for tests.
+    Uses the db_session fixture.
     """
     return EmployeeService(db_session)
 
@@ -47,7 +47,7 @@ def service(db_session):
 @pytest.fixture
 def employee_data():
     """
-    Тестовые данные для создания сотрудника.
+    Test data for creating an employee.
     """
     return EmployeeCreate(
         full_name="Иванов Иван Иванович",
@@ -63,7 +63,7 @@ def employee_data():
 @pytest.fixture
 def created_employee(service, employee_data):
     """
-    Создаёт реального сотрудника в тестовой БД.
-    Использует service и employee_data.
+    Creates a real employee in the test database.
+    Uses service and employee_data fixtures.
     """
     return service.create(employee_data)

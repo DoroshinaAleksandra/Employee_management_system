@@ -1,5 +1,5 @@
 """
-Pydantic схемы для валидации входных данных.
+Pydantic schemas for input data validation.
 """
 from datetime import date
 from typing import Optional
@@ -9,12 +9,12 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 class EmployeeCreate(BaseModel):
     """
-    Схема для создания нового сотрудника.
-    Все поля проходят валидацию перед записью в БД:
-        full_name: минимум 3 символа и 2 слова (имя + фамилия)
-        salary: не может быть отрицательной
-        currency: код валюты (RUB/USD/EUR)
-        timezone: часовой пояс в формате UTC±N
+    Schema for creating a new employee.
+    All fields are validated before writing to the database:
+        full_name: minimum 3 characters and 2 words (first + last name)
+        salary: cannot be negative
+        currency: currency code (RUB/USD/EUR)
+        timezone: timezone in UTC±N format
     """
 
     full_name: str = Field(..., min_length=3, max_length=100)
@@ -29,16 +29,16 @@ class EmployeeCreate(BaseModel):
     @classmethod
     def check_name_has_parts(cls, v) -> str:
         """
-        Проверяет, что ФИО содержит минимум 2 слова.
+        Checks that full_name contains at least 2 words.
         """
         if len(v.split()) < 2:
-            raise ValueError('ФИО должно содержать имя и фамилию (отчество при наличии)')
+            raise ValueError('Full name must contain first and last name')
         return v
 
 
 class EmployeeRead(BaseModel):
     """
-    Схема для чтения данных сотрудника.
+    Schema for reading employee data.
     """
 
     id: int

@@ -1,17 +1,17 @@
 """
-Тесты на CRUD-операции EmployeeService.
+Tests for CRUD operations on EmployeeService.
 """
 from src.management_system.schemas import EmployeeCreate
 
 
 class TestCreateEmployee:
     """
-    Тесты на создание сотрудников.
+    Tests for creating employees.
     """
 
     def test_create_employee_success(self, service, employee_data):
         """
-        Тест: успешное создание сотрудника.
+        Test: successful employee creation.
         """
         created = service.create(employee_data)
 
@@ -22,7 +22,7 @@ class TestCreateEmployee:
 
     def test_create_employee_with_zero_salary(self, service):
         """
-        Тест: создание сотрудника с нулевой зарплатой (валидно).
+        Test: creating employee with zero salary (valid).
         """
         emp_data = EmployeeCreate(
             full_name="Петров Петр",
@@ -34,7 +34,7 @@ class TestCreateEmployee:
 
     def test_create_multiple_employees(self, service, employee_data):
         """
-        Тест: создание нескольких сотрудников.
+        Test: creating multiple employees.
         """
         service.create(employee_data)
         service.create(EmployeeCreate(full_name="Петрова Анна", salary=120000))
@@ -45,19 +45,19 @@ class TestCreateEmployee:
 
 class TestReadEmployees:
     """
-    Тесты на чтение сотрудников.
+    Tests for reading employees.
     """
 
     def test_get_all_empty(self, service):
         """
-        Тест: получение данных всех сотрудников из пустой базы.
+        Test: get all employees from empty database.
         """
         all_emps = service.get_all()
         assert len(all_emps) == 0
 
     def test_get_all_with_data(self, service, employee_data):
         """
-        Тест: получение данных всех сотрудников (есть данные).
+        Test: get all employees (with data).
         """
         service.create(employee_data)
         service.create(EmployeeCreate(full_name="Петрова Анна", salary=120000))
@@ -67,7 +67,7 @@ class TestReadEmployees:
 
     def test_get_by_id_exists(self, service, created_employee):
         """
-        Тест: получение сотрудника по ID (существует).
+        Test: get employee by ID (exists).
         """
         found = service.get_by_id(created_employee.id)
 
@@ -76,7 +76,7 @@ class TestReadEmployees:
 
     def test_get_by_id_not_exists(self, service):
         """
-        Тест: получение сотрудника по ID (не существует).
+        Test: get employee by ID (does not exist).
         """
         found = service.get_by_id(999)
         assert found is None
@@ -84,12 +84,12 @@ class TestReadEmployees:
 
 class TestUpdateEmployee:
     """
-    Тесты на обновление данных сотрудников.
+    Tests for updating employees.
     """
 
     def test_update_salary(self, service, created_employee):
         """
-        Тест: обновление зарплаты.
+        Test: salary update.
         """
         updated = service.update(
             created_employee.id,
@@ -103,7 +103,7 @@ class TestUpdateEmployee:
 
     def test_update_multiple_fields(self, service, created_employee):
         """
-        Тест: обновление нескольких полей одновременно.
+        Test: update multiple fields simultaneously.
         """
         updated = service.update(
             created_employee.id,
@@ -120,7 +120,7 @@ class TestUpdateEmployee:
 
     def test_update_partial_fields(self, service, created_employee):
         """
-        Тест: обновление только должности (остальные поля не меняются).
+        Test: update only position (other fields remain unchanged).
         """
         original_name = created_employee.full_name
         original_salary = created_employee.salary
@@ -140,7 +140,7 @@ class TestUpdateEmployee:
 
     def test_update_not_exists(self, service, employee_data):
         """
-        Тест: обновление несуществующего сотрудника.
+        Test: update non-existent employee.
         """
         updated = service.update(999, employee_data)
         assert updated is None
@@ -148,12 +148,12 @@ class TestUpdateEmployee:
 
 class TestDeleteEmployee:
     """
-    Тесты на удаление сотрудников.
+    Tests for deleting employees.
     """
 
     def test_delete_success(self, service, created_employee):
         """
-        Тест: успешное удаление.
+        Test: successful deletion.
         """
         deleted = service.delete(created_employee.id)
 
@@ -162,7 +162,7 @@ class TestDeleteEmployee:
 
     def test_delete_not_exists(self, service):
         """
-        Тест: удаление несуществующего сотрудника.
+        Test: delete non-existent employee.
         """
         deleted = service.delete(999)
         assert deleted is False

@@ -1,42 +1,42 @@
 """
-Настройка подключения к базе данных.
-Используется SQLite.
+Database connection setup.
+Uses SQLite.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-# URL базы данных: создаем файл employees.db в корне проекта
-# если файла нет, SQLite создаст его автоматически
+# Database URL: creates employees.db file in the project root
+# SQLite will automatically create the file if it doesn't exist
 SQLALCHEMY_DATABASE_URL = "sqlite:///./employees.db"
 
-# Создаём соединение с БД
+# Create database engine/connection
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
 
-# Сессия для работы с БД
+# Session factory for database operations
 SessionLocal = sessionmaker( # pylint: disable=invalid-name
     autocommit=False,
     autoflush=False,
     bind=engine
 )
 
-# Базовый класс для всех моделей (от него наследуются все таблицы)
+# Base class for all models (all tables inherit from this)
 Base = declarative_base()
 
 
 def init_db() -> None:
     """
-    Создаёт все таблицы, определённые в models.py (если их еще нет).
+    Create all tables defined in models.py (if they don't exist yet).
     """
     Base.metadata.create_all(bind=engine)
 
 
 def get_db() -> Session:
     """
-    Генератор сессии для зависимостей.
-    Гарантирует закрытие сессии даже при ошибке (паттерн для веб-фреймворков).
+    Session generator for dependency injection.
+    Ensures session is closed even if an error occurs (pattern for web frameworks).
     """
     db = SessionLocal()
     try:
