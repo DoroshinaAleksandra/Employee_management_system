@@ -30,6 +30,13 @@ class EmployeeCreate(BaseModel):
     def check_name_has_parts(cls, v) -> str:
         """
         Checks that full_name contains at least 2 words.
+
+        Args:
+            cls: The class itself (classmethod parameter).
+            v: The value to validate (full_name string).
+
+        Returns:
+            str: Validated full name string.
         """
         if len(v.split()) < 2:
             raise ValueError('Full name must contain first and last name')
