@@ -37,6 +37,9 @@ def get_db() -> Session:
     """
     Session generator for dependency injection.
     Ensures session is closed even if an error occurs (pattern for web frameworks).
+
+    Yields:
+        Session: SQLAlchemy session for database operations.
     """
     db = SessionLocal()
     try:
