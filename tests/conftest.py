@@ -17,20 +17,15 @@ def db_session():
     Creates an in-memory test database (SQLite :memory:).
     Database is recreated for each test and cleaned up afterwards.
     """
-    # Create in-memory database engine
     engine = create_engine("sqlite:///:memory:", echo=False)
 
-    # Create all tables (employees)
     Base.metadata.create_all(bind=engine)
 
-    # Create session factory for database operations
     session_factory = sessionmaker(bind=engine)
     session = session_factory()
 
-    # Yield session to the test
     yield session
 
-    # After test: close session and dispose engine
     session.close()
     engine.dispose()
 
