@@ -66,6 +66,52 @@ graph TD
     M -->|Read/Write| DB[(SQLite Database<br/>employees.db)]
 ```
 
+```mermaid 
+sequenceDiagram
+    actor User
+    participant GUI as NiceGUI (main.py)
+    participant SVC as EmployeeService (services.py)
+    participant PYD as Pydantic (schemas.py)
+    participant DB as SessionLocal (database.py)
+    participant ORM as Employee (models.py)
+    participant SQL as SQLite (employees.db)
+
+    User->>GUI: Fill form & click "Add"
+    GUI->>SVC: service.create(employee_data)
+    
+    Note over SVC,PYD: Validation Phase
+    SVC->>PYD: EmployeeCreate(**employee_data)
+    
+    alt Validation Fails
+        PYD-->>SVC: Raises ValidationError
+        SVC-->>GUI: Returns error (None)
+        GUI-->>User: Shows error message
+    else Validation Passes
+        PYD-->>SVC: Returns validated EmployeeCreate object
+        
+        Note over SVC,SQL: Database Operation Phase
+        SVC->>DB: SessionLocal() (get session)
+        DB-->>SVC: Returns db session
+        
+        SVC->>ORM: Employee(**validated_data.model_dump())
+        ORM-->>SVC: Returns Employee instance (not saved yet)
+        
+        SVC->>DB: db.add(employee)
+        SVC->>DB: db.commit()
+        DB->>SQL: INSERT INTO employees ...
+        SQL-->>DB: Returns new record with ID
+        
+        SVC->>DB: db.refresh(employee)
+        DB-->>SVC: Updated employee with ID
+        
+        SVC->>DB: db.close()
+        DB-->>SVC: Session closed
+        
+        SVC-->>GUI: Returns employee object
+        GUI-->>User: Displays updated table
+    end
+```
+
 ## 4. Project Structure & Data Flow
 
 The application is divided into logical modules to maintain separation of concerns:
