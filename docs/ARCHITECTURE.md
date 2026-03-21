@@ -16,57 +16,7 @@ This document outlines the internal architecture of the application, the chosen 
 
 ---
 
-## 2. Database Schema (SQLAlchemy)
-
-Data persistence is handled via the employees table. The database model (models.py) includes the following fields:
-
-* `id` (Integer, Primary Key) — unique identifier.
-
-* `full_name` (String) — employee's full name.
-
-* `birth_date` (Date, Optional) — date of birth.
-
-* `hire_date` (Date, Optional) — employment start date.
-
-* `position` (String, Optional) — job title.
-
-* `salary` (Float) — employee's salary.
-
-* `currency` (String, Optional) — salary currency (e.g., USD, EUR, RUB).
-
-* `timezone` (String, Optional) — employee's local timezone.
-
----
-
-## 3. Data Validation (Pydantic)
-
-Input data verification and sanitization are centralized in `schemas.py`. Upon employee creation or update, the payload is validated against the `EmployeeCreate` schema, which enforces:
-
-* Type checking (e.g., ensuring salary is a float).
-
-* Logical constraints (e.g., salary > 0, logical boundary checks for dates). Invalid payloads are rejected before interacting with the database.
-
----
-
-## 4. Project Structure & Modularity
-
-The application is divided into logical modules to maintain separation of concerns:
-
-* `database.py` — connection setup, engine, and session management.
-
-* `models.py` — SQLAlchemy table definitions.
-
-* `schemas.py` — Pydantic schemas for data validation.
-
-* `services.py` (CRUD) — core business logic functions (Create, Read, Update, Delete) isolated from the UI layer.
-
-* `main.py` — application entry point, NiceGUI initialization, and UI rendering.
-
-* `tests/` — directory containing Pytest unit tests for backend logic.
-
----
-
-## 5. Project Structure
+## 2. Project Structure
 
 ```
 Employee_management_system/
@@ -103,9 +53,36 @@ Employee_management_system/
 └── pytest.ini # Pytest configuration
 ```
 
----
+--- 
 
-## 6. Data Flow
+## 3. Architecture Diagrams 
+
+```mermaid
+graph TD
+    UI[NiceGUI Web Interface<br/>main.py] -->|User Input| S[Services Layer<br/>services.py]
+    S -->|Validate Payload| P[Pydantic Schemas<br/>schemas.py]
+    P -->|Valid Data| S
+    S -->|ORM Mapping| M[SQLAlchemy Models<br/>models.py]
+    M -->|Read/Write| DB[(SQLite Database<br/>employees.db)]
+```
+
+## 4. Project Structure & Data Flow
+
+The application is divided into logical modules to maintain separation of concerns:
+
+* `database.py` — connection setup, engine, and session management.
+
+* `models.py` — SQLAlchemy table definitions.
+
+* `schemas.py` — Pydantic schemas for data validation.
+
+* `services.py` (CRUD) — core business logic functions (Create, Read, Update, Delete) isolated from the UI layer.
+
+* `main.py` — application entry point, NiceGUI initialization, and UI rendering.
+
+* `tests/` — directory containing Pytest unit tests for backend logic.
+
+---
 
 The user submits data via the web form (NiceGUI).
 
