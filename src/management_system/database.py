@@ -2,8 +2,10 @@
 Настройка подключения к базе данных.
 Используется SQLite.
 """
+from typing import Iterator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 # URL базы данных: создаем файл employees.db в корне проекта
 # если файла нет, SQLite создаст его автоматически
@@ -33,7 +35,7 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def get_db() -> Session:
+def get_db() -> Iterator[Session]:
     """
     Генератор сессии для зависимостей.
     Гарантирует закрытие сессии даже при ошибке (паттерн для веб-фреймворков).
