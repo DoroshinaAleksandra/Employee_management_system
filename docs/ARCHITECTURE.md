@@ -6,7 +6,7 @@ This document outlines the internal architecture of the application, the chosen 
 
 ## 1. Technology Stack & Justification
 
-To achieve maximum efficiency and meet the advanced project requirements, the following stack was selected:
+The project uses the following stack:
 
 * NiceGUI — web UI framework (Python-native, no HTML/CSS needed)
 
