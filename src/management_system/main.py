@@ -1,5 +1,5 @@
 """
-Временный код для проверки работоспособности всего связанного с БД.
+Temporary code for testing database functionality.
 """
 from .database import SessionLocal, init_db
 from .schemas import EmployeeCreate
@@ -7,7 +7,10 @@ from .services import EmployeeService
 
 
 def main():
-    print("Создаем тестовые данные в базе...\n")
+    """
+    Creates demo employees and saves them to the database.
+    """
+    print("Creating test data in database...\n")
 
     init_db()
 
@@ -22,12 +25,11 @@ def main():
 
     for emp_data in demo_employees:
         created = service.create(emp_data)
-        print(f"Добавлен: {created.full_name} ({created.position})")
+        print(f"Added: {created.full_name} ({created.position})")
 
     db.close()
-    print("Тестовые данные сохранены в employees.db.")
+    print("Test data saved to employees.db.")
 
 
 if __name__ == "__main__":
     main()
-
