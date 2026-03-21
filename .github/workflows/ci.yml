@@ -69,7 +69,7 @@ jobs:
              src/management_system/database.py --ignore-missing-imports
 
   unit-tests:
-    name: Pytest Check
+    name: Unit Tests and Coverage
     runs-on: ubuntu-latest
     needs: [install]
     steps:
@@ -80,20 +80,9 @@ jobs:
         python-version: '3.11'
     - name: Install dependencies
       run: pip install -r requirements.txt
-    - name: Run Pytest
-      run: pytest tests/ -v --cov=src/management_system --cov-report=term-missing
-
-  coverage:
-    name: Coverage Check
-    runs-on: ubuntu-latest
-    needs: [install]
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-    - name: Check Coverage
-      run: pytest tests/ --cov=src/management_system --cov-fail-under=50 --cov-report=term
+    - name: Run tests with coverage
+      run: |
+        pytest tests/ -v \
+          --cov=src/management_system \
+          --cov-report=term-missing \
+          --cov-fail-under=50
