@@ -1,6 +1,6 @@
 # System Architecture: Employee Management System
 
-This document outlines the internal architecture of the application, the chosen technology stack, and the data flow principles.
+This document outlines the internal architecture of the application, its module structure, and the data flow principles.
 
 ## 1. Project Structure
 
