@@ -16,7 +16,7 @@ from .constants import (
 
 class EmployeeApp:
     """
-    Builds an interface for the app
+    Builds an interface for the app.
     """
 
     def __init__(self):
@@ -47,7 +47,7 @@ class EmployeeApp:
 
     def _build_ui(self):
         """
-        Builds the main user interface layout
+        Builds the main user interface layout.
         """
         with ui.header().classes('items-center justify-between'):
             ui.label('Management System').classes('text-h6 font-bold')
@@ -68,7 +68,7 @@ class EmployeeApp:
 
     def _render_table(self):
         """
-        Renders the employee table with all records from the database
+        Renders the employee table with all records from the database.
         """
         self._refresh_session()
         employees = self.service.get_all()
@@ -115,7 +115,7 @@ class EmployeeApp:
 
     def _open_create_dialog(self):
         """
-        Opens the dialog for creating a new employee
+        Opens the dialog for creating a new employee.
         """
         with ui.dialog() as dialog, ui.card().classes('w-96 p-4'):
             ui.label('Новый сотрудник').classes('text-h6 q-mb-md text-primary')
@@ -176,9 +176,9 @@ class EmployeeApp:
 
     def _open_edit_dialog(self, emp_id: int):
         """
-        Opens the dialog for editing an existing employee
+        Opens the dialog for editing an existing employee.
 
-        Args: emp_id: The ID of the employee to edit
+        Args: emp_id: The ID of the employee to edit.
         """
         self._refresh_session()
         emp = self.service.get_by_id(emp_id)
@@ -246,9 +246,9 @@ class EmployeeApp:
 
     def _confirm_delete(self, emp_id: int):
         """
-        Open confirmation dialog for deleting an employee
+        Open confirmation dialog for deleting an employee.
 
-        Args: emp_id: The ID of the employee to delete
+        Args: emp_id: The ID of the employee to delete.
         """
         with ui.dialog() as dialog, ui.card().classes('p-4'):
             ui.label('Вы уверены?').classes('text-h6')
