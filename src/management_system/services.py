@@ -1,5 +1,5 @@
 """
-Сервисный слой для работы с сотрудниками.
+Service layer for employee operations.
 """
 from typing import List, Optional
 
@@ -10,7 +10,7 @@ from . import models, schemas
 
 class EmployeeService:
     """
-    Сервис для CRUD-операций с сотрудниками.
+    Service for CRUD operations on employees.
     """
 
     def __init__(self, db: Session):
@@ -18,8 +18,8 @@ class EmployeeService:
 
     def create(self, employee: schemas.EmployeeCreate) -> models.Employee:
         """
-        Создаёт нового сотрудника и сохраняет в БД.
-        Возвращает объект с присвоенным ID.
+        Creates a new employee and saves to the database.
+        Returns the object with assigned ID.
         """
         db_employee = models.Employee(**employee.model_dump())
         self.db.add(db_employee)
@@ -29,14 +29,14 @@ class EmployeeService:
 
     def get_all(self) -> List[models.Employee]:
         """
-        Возвращает список всех сотрудников из базы данных.
+        Returns a list of all employees from the database.
         """
         return self.db.query(models.Employee).all()
 
     def get_by_id(self, employee_id: int) -> Optional[models.Employee]:
         """
-        Находит сотрудника по уникальному ID.
-        Возвращает None, если не найден.
+        Finds an employee by unique ID.
+        Returns None if not found.
         """
         return self.db.query(models.Employee).filter(
             models.Employee.id == employee_id
@@ -45,8 +45,8 @@ class EmployeeService:
     def update(self, employee_id: int,
                employee: schemas.EmployeeCreate) -> Optional[models.Employee]:
         """
-        Обновляет поля сотрудника по ID.
-        Возвращает обновлённый объект или None.
+        Updates employee fields by ID.
+        Returns the updated object or None.
         """
         db_employee = self.get_by_id(employee_id)
         if db_employee:
@@ -58,8 +58,8 @@ class EmployeeService:
 
     def delete(self, employee_id: int) -> bool:
         """
-        Удаляет сотрудника по ID.
-        Возвращает True если успешно, False если не найден.
+         Deletes an employee by ID.
+        Returns True if successful, False if not found.
         """
         db_employee = self.get_by_id(employee_id)
         if db_employee:
