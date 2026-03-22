@@ -266,7 +266,7 @@ class TestDialogs:
     @patch('src.management_system.main.ui')
     @patch.object(EmployeeService, 'delete')
     @patch.object(EmployeeApp, '_render_table')
-    def test_delete_callback_calls_service(self, mock_render_table, mock_delete, mock_ui):
+    def test_confirm_delete_does_not_delete_immediately(self, mock_render_table, mock_delete, mock_ui):
         """
         Verify that confirming deletion calls service.delete and refreshes table.
         """

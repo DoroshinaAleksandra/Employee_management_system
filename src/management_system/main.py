@@ -181,6 +181,9 @@ class EmployeeApp:
         Args: emp_id: The ID of the employee to edit.
         """
         self._refresh_session()
+        if not isinstance(self.service, EmployeeService):
+            ui.notify('Прблемы с сервисом', type='negative', icon='error')
+            return
         emp = self.service.get_by_id(emp_id)
         if not emp:
             ui.notify('Сотрудник не найден', type='warning')
@@ -189,11 +192,11 @@ class EmployeeApp:
         with ui.dialog() as dialog, ui.card().classes('w-96 p-4'):
             ui.label(f'Редактирование: {emp.full_name}').classes('text-h6 q-mb-md text-primary')
 
-            inp_name = ui.input(label='ФИО', value=emp.full_name).classes('w-full')
-            inp_pos = ui.input(label='Должность', value=emp.position or '').classes('w-full')
+            inp_name = ui.input(label='ФИО', value=str(emp.full_name)).classes('w-full')
+            inp_pos = ui.input(label='Должность', value=str(emp.position or '')).classes('w-full')
 
             with ui.row().classes('w-full gap-2'):
-                inp_salary = ui.number(label='Зарплата', value=emp.salary, format='%.2f').classes('col-grow')
+                inp_salary = ui.number(label='Зарплата', value=float(emp.salary), format='%.2f').classes('col-grow')
                 sel_currency = ui.select(
                     options=CURRENCIES,
                     label='Валюта',
