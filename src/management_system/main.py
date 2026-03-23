@@ -87,8 +87,8 @@ class EmployeeApp:
                 ui.label('ФИО').classes('col-2')
                 ui.label('Должность').classes('col-1')
                 ui.label('Зарплата').classes('col-1 text-right')
-                ui.label('Дата рождения').classes('col-1 text-center')
-                ui.label('Принят').classes('col-1 text-center')
+                ui.label('Дата рождения').classes('col-1 text-center').tooltip('Формат: DD.MM.YYYY')
+                ui.label('Принят').classes('col-1 text-center').tooltip('Формат: DD.MM.YYYY')
                 ui.label('Действия').classes('col-1 text-center')
 
             for emp in employees:
@@ -182,7 +182,7 @@ class EmployeeApp:
         """
         self._refresh_session()
         if not isinstance(self.service, EmployeeService):
-            ui.notify('Прблемы с сервисом', type='negative', icon='error')
+            ui.notify('Проблемы с сервисом', type='negative', icon='error')
             return
         emp = self.service.get_by_id(emp_id)
         if not emp:
