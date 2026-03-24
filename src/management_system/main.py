@@ -14,6 +14,11 @@ from .constants import (
 )
 
 
+class ValidationError(Exception):
+    """There is error in validating the data"""
+    pass
+
+
 class EmployeeApp:
     """
     Builds an interface for the app.
@@ -167,7 +172,7 @@ class EmployeeApp:
                         ui.notify('Сотрудник успешно добавлен!', type='positive', icon='check')
                         dialog.close()
                         self._render_table()
-                    except Exception as e:
+                    except ValidationError as e:
                         ui.notify(f'Ошибка данных: {str(e)}', type='negative', icon='error')
 
                 ui.button('Создать', on_click=save_new).props('color=primary')
@@ -240,8 +245,8 @@ class EmployeeApp:
                             self._render_table()
                         else:
                             ui.notify('Не удалось обновить', type='negative')
-                    except Exception as e:
-                        ui.notify(f'Ошибка: {str(e)}', type='negative', icon='error')
+                    except ValidationError as e:
+                        ui.notify(f'Ошибка данных: {str(e)}', type='negative', icon='error')
 
                 ui.button('Сохранить', on_click=save_changes).props('color=primary')
 
