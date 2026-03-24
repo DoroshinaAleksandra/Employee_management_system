@@ -16,8 +16,9 @@ Employee_management_system/
 ├── src/
 │ └── management_system/
 │ ├── __init__.py
-│ ├── main.py # NiceGUI UI entry point
+│ ├── constants.py # Application constants (currencies, timezones)
 │ ├── database.py # DB connection, session management
+│ ├── main.py # NiceGUI UI entry point
 │ ├── models.py # SQLAlchemy table definitions
 │ ├── schemas.py # Pydantic validation schemas
 │ └── services.py # CRUD operations
@@ -42,6 +43,7 @@ Employee_management_system/
 The application is divided into logical modules to maintain separation of concerns:
 
 * `database.py` — handles connection setup, engine creation, and SessionLocal management.
+* `constants.py` — application-wide constants (currency codes, timezone options, default values).
 * `models.py` — contains SQLAlchemy table definitions. 
   * `Class Employee`: maps to the `employees` table and defines the data schema (id, full_name, birth_date, hire_date, position, salary, currency, timezone).
 * `schemas.py` — contains Pydantic schemas for data validation. 
@@ -119,12 +121,12 @@ sequenceDiagram
 
 ## 3. Components Interaction & Data Flow
 
-1. The user submits data via the web form (NiceGUI).
+1. The user submits data via the web form in `main.py` (NiceGUI).
 
-2. The payload is routed to the business logic layer (`services.py`).
+2. Data is passed through Pydantic schemas (`schemas.py`) for validation. If validation fails, a `ValidationError` is raised and caught in `main.py`, showing an error notification to the user.
 
-3. Data is passed through Pydantic schemas (`schemas.py`) for validation. If validation fails, an exception is raised, and the transaction is aborted.
+3. If validation passes, the validated object is passed to `EmployeeService.create()` in `services.py`.
 
-4. If valid, SQLAlchemy maps the data to an object and commits the SQL transaction to the SQLite database.
+4. The service maps the data to a SQLAlchemy model (`models.Employee(**data)`) and persists it via the database session (`database.py`).
 
 5. The updated employee record is retrieved from the database and rendered back to the UI table.
