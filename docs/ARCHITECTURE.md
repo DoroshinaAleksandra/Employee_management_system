@@ -60,9 +60,9 @@ The application is divided into logical modules to maintain separation of concer
 
 ```mermaid
 graph TD
-    UI[NiceGUI Web Interface<br/>main.py] -->|User Input| S[Services Layer<br/>services.py]
-    S -->|Validate Payload| P[Pydantic Schemas<br/>schemas.py]
-    P -->|Valid Data| S
+    UI[NiceGUI Web Interface<br/>main.py] -->|User Input| P[Pydantic Schemas<br/>schemas.py]
+    P -->|Valid Data| S[Services Layer<br/>services.py]
+    P -.->|ValidationError| UI
     S -->|ORM Mapping| M[SQLAlchemy Models<br/>models.py]
     M -->|Read/Write| DB[(SQLite Database<br/>employees.db)]
 ```
