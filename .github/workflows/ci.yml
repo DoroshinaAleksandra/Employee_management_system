@@ -61,8 +61,10 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt
     - name: Run Mypy
+      env:
+        MYPYPATH: src
       run: |
-        mypy --explicit-package-bases --mypy-path src \
+        mypy --explicit-package-bases \
              src/management_system/main.py \
              src/management_system/services.py \
              src/management_system/schemas.py \
