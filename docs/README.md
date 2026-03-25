@@ -52,7 +52,10 @@ Encapsulates the application interface logic.
 
 #### Exceptions
 
-- `ValidationError`: TBD
+| Exception | Description |
+| :--- | :--- |
+| `pydantic.ValidationError` | Raised when input data fails schema validation. Caught in `_open_create_dialog` (`save_new`) and `_open_edit_dialog` (`save_changes`) to show user-friendly `ui.notify()` messages. |
+| `Uncaught Exceptions` | Database errors or other unexpected exceptions are **not caught** and will propagate to the NiceGUI global error handler (resulting in a 500 error or server log). |
 
 ---
 
@@ -70,6 +73,30 @@ Contains the core business logic, isolated from the UI layer. Handles database t
 | `get_by_id(employee_id: int)` | Filters the database by unique ID. Returns the employee object or `None` if not found. |
 | `update(employee_id: int, employee: EmployeeCreate)` | Retrieves the employee by ID. If found, updates attributes based on the input schema, commits, and refreshes. Returns the updated object or `None`. |
 | `delete(employee_id: int)` | Retrieves the employee by ID. If found, deletes the record and commits. Returns `True` if successful, `False` if not found. |
+
+> **Note on `update()` Method**
+>
+> The method requires passing **all mandatory fields** of the `EmployeeCreate` schema (`full_name`, `salary`), even if they remain unchanged.
+>
+> **Reason:** Pydantic validation occurs prior to the service call. If a mandatory field is omitted, the schema validation will fail.
+>
+> **Behavior:**
+> - Passed fields are updated via `setattr()`.
+> - Fields not included in the request **retain their existing values** (provided mandatory fields are passed with their current values).
+> - Returns `None` if the employee with the specified `employee_id` is not found.
+>
+> **Example of Correct Usage:**
+> ```python
+> # To update only the position, you must also pass the unchanged mandatory fields:
+> service.update(
+>     employee_id=1,
+>     employee=EmployeeCreate(
+>         full_name="Ivanov Ivan",  # current name
+>         salary=100000,            # current salary
+>         position="Senior Developer"  # new value
+>     )
+> )
+> ```
 
 ---
 
