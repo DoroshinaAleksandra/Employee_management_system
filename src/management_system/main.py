@@ -3,10 +3,10 @@ from typing import Optional
 from nicegui import ui
 from sqlalchemy.orm import Session
 
-from src.management_system.database import init_db, SessionLocal
-from src.management_system.schemas import EmployeeCreate
-from src.management_system.services import EmployeeService
-from src.management_system.constants import (
+from management_system.database import init_db, SessionLocal
+from management_system.schemas import EmployeeCreate
+from management_system.services import EmployeeService
+from management_system.constants import (
     CURRENCIES,
     TIMEZONES,
     DEFAULT_CURRENCY,
