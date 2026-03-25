@@ -2,7 +2,7 @@
 
 This document provides detailed information about the internal structure, classes, functions, and testing infrastructure of the Employee Management System. 
 
-For general project overview, installation instructions, and usage guides, please refer to the [main README](../README.md).
+For general project overview, installation instructions, and usage guides, please refer to the [README](../README.md).
 
 ## Table of Contents
 
@@ -52,7 +52,7 @@ Encapsulates the application interface logic.
 
 #### Exceptions
 
-- `ValidationError`: Custom exception raised when data validation fails during input processing.
+- `ValidationError`: TBD
 
 ---
 
@@ -166,11 +166,11 @@ To ensure test isolation, an in-memory SQLite database is used for each test ses
 
 - `test_services.py`: Validates CRUD operations (create, read, update, delete) within the service layer.
 - `test_schemas.py`: Validates data constraints (e.g., salary limits, name format) using Pydantic schemas.
-- `test_main.py`: Contains tests for UI logic (if applicable).
+- `test_gui.py`: Contains tests for UI logic (if applicable).
 
 ### Running Tests
 
 To run the test suite, execute the following command in the project root:
 
 ```bash
-pytest
+pytest tests -v
