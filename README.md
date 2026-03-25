@@ -19,20 +19,34 @@ with a web browser, eliminating the need for installation on client machines.
 - **Date Management**: date of birth and hire date tracking
 
 ## **Installation**
+
 1. Clone the repository   
 
-    ``` 
+   ``` 
     git clone https://github.com/DoroshinaAleksandra/Employee_management_system   
     cd your-repo
    ```
+
 2. Install dependencies
+
    ```
    pip install -r requirements.txt
    ```
-3. Run the application
+
+## **Usage**
+
+After installation, run the application
+
    ```
    python -m src.management_system.main
    ```
+
+## **Architecture**
+
+The application follows a layered architecture:
+UI (NiceGUI) → Pydantic (validation) → Services (business logic) → SQLAlchemy → SQLite
+This separation ensures testability, maintainability, and clear data flow.
+Full architecture details: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
    
 ## **Contributors**
 
