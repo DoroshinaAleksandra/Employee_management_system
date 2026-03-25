@@ -62,11 +62,13 @@ jobs:
       run: pip install -r requirements.txt
     - name: Run Mypy
       run: |
-        mypy src/management_system/main.py \
+        mypy --explicit-package-bases --mypy-path src \
+             src/management_system/main.py \
              src/management_system/services.py \
              src/management_system/schemas.py \
              src/management_system/models.py \
-             src/management_system/database.py --ignore-missing-imports
+             src/management_system/database.py \
+             --ignore-missing-imports
 
   unit-tests:
     name: Unit Tests and Coverage
