@@ -1,4 +1,5 @@
 from datetime import date
+import pydantic
 from typing import Optional
 from nicegui import ui
 from sqlalchemy.orm import Session
@@ -12,11 +13,6 @@ from .constants import (
     DEFAULT_CURRENCY,
     DEFAULT_TIMEZONE,
 )
-
-
-class ValidationError(Exception):
-    """There is error in validating the data"""
-    pass
 
 
 class EmployeeApp:
@@ -172,7 +168,7 @@ class EmployeeApp:
                         ui.notify('Сотрудник успешно добавлен!', type='positive', icon='check')
                         dialog.close()
                         self._render_table()
-                    except ValidationError as e:
+                    except pydantic.ValidationError as e:
                         ui.notify(f'Ошибка данных: {str(e)}', type='negative', icon='error')
 
                 ui.button('Создать', on_click=save_new).props('color=primary')
@@ -245,7 +241,7 @@ class EmployeeApp:
                             self._render_table()
                         else:
                             ui.notify('Не удалось обновить', type='negative')
-                    except ValidationError as e:
+                    except pydantic.ValidationError as e:
                         ui.notify(f'Ошибка данных: {str(e)}', type='negative', icon='error')
 
                 ui.button('Сохранить', on_click=save_changes).props('color=primary')
