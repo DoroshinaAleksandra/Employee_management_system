@@ -22,7 +22,13 @@ For general project overview, installation instructions, and usage guides, pleas
 
 The application follows a layered architecture to ensure separation of concerns, testability, and maintainability.
 
-UI (NiceGUI) -> Pydantic (Validation) -> Services (Business Logic) -> SQLAlchemy (ORM) -> SQLite
+User -> EmployeeApp -> [DatabaseManager | EmployeeTableView | EmployeeDialogManager]
+                              |
+                              v
+                    EmployeeDialogManager -> Pydantic -> EmployeeService -> SQLAlchemy -> SQLite
+                              |
+                              v
+                    EmployeeTableView <- (callback: on_data_changed) <- refresh UI
 
 Detailed architecture diagrams and data flow sequences can be found in [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -34,28 +40,50 @@ Detailed architecture diagrams and data flow sequences can be found in [ARCHITEC
 
 The entry point of the application. Handles the NiceGUI interface initialization and user interaction events.
 
-#### Class: `EmployeeApp`
-
-Encapsulates the application interface logic.
+#### Class: `DatabaseManager`
+Manages database connections and session lifecycle.
 
 | Method / Attribute | Description |
 | :--- | :--- |
-| `__init__()` | Initializes session placeholders and the table container. |
-| `initialize_db()` | Calls `init_db()` and refreshes the database session. |
-| `_refresh_session()` | Closes the existing session (if any) and creates a new `SessionLocal` and `EmployeeService` instance. |
-| `run()` | Initializes the database, builds the UI, and starts the NiceGUI server (host: 127.0.0.1, port: 8080). |
-| `_build_ui()` | Constructs the main layout: header, title, "Add Employee" button, and the table container. |
-| `_render_table()` | Fetches all employees via the service, clears the container, and renders the data rows. Handles empty state messages. |
-| `_open_create_dialog()` | Opens a dialog with form inputs for creating a new employee. Includes validation logic. |
-| `_open_edit_dialog(emp_id)` | Opens a dialog pre-filled with existing data for editing an employee by ID. |
-| `_confirm_delete(emp_id)` | Opens a confirmation dialog before deleting an employee record. |
+| `__init__()` | Initializes `db_session` and `service` as `None`. |
+| `initialize_db()` | Calls `init_db()` and then `refresh_session()`. |
+| `refresh_session()` | Closes existing session (if any), creates new `SessionLocal`, and initializes `EmployeeService`. |
+| `get_service()` | Returns the `EmployeeService` instance for CRUD operations. |
+
+#### Class: `EmployeeTableView`
+Renders the employee table with CRUD action buttons.
+
+| Method / Attribute | Description |
+| :--- | :--- |
+| `__init__(container, db_manager, on_edit_callback, on_delete_callback)` | Initializes with UI container, database manager, and callback functions. |
+| `render()` | Fetches employees via `db_manager`, clears container, renders table rows or empty state message. |
+
+#### Class: `EmployeeDialogManager`
+Handles all dialog windows (Create, Edit, Delete).
+
+| Method / Attribute | Description |
+| :--- | :--- |
+| `__init__(db_manager, on_data_changed)` | Initializes with database manager and refresh callback. |
+| `open_create_dialog()` | Opens dialog with form inputs for new employee; validates via Pydantic; calls `on_data_changed` on success. |
+| `open_edit_dialog(emp_id)` | Opens pre-filled dialog for editing; handles "not found" case with warning notification. |
+| `confirm_delete(emp_id)` | Opens confirmation dialog; calls delete service method only after user confirmation. |
+
+#### Class: `EmployeeApp`
+Orchestrates all components and builds the main UI.
+
+| Method / Attribute | Description |
+| :--- | :--- |
+| `__init__()` | Creates `DatabaseManager`; sets `table_view`, `dialog_manager`, `table_container` to `None`. |
+| `run()` | Initializes DB via `db_manager`, builds UI, starts NiceGUI server (127.0.0.1:8080). |
+| `_build_ui()` | Constructs layout: header, title, "Add Employee" button; instantiates `EmployeeTableView` and `EmployeeDialogManager` with callbacks. |
+| `_render_table()` | Delegates to `table_view.render()` if initialized. |
+| `_open_create_dialog()` / `_open_edit_dialog()` / `_confirm_delete()` | Delegate to `dialog_manager` methods. |
 
 #### Exceptions
 
 | Exception | Description |
 | :--- | :--- |
-| `pydantic.ValidationError` | Raised when input data fails schema validation. Caught in `_open_create_dialog` (`save_new`) and `_open_edit_dialog` (`save_changes`) to show user-friendly `ui.notify()` messages. |
-| `Uncaught Exceptions` | Database errors or other unexpected exceptions are **not caught** and will propagate to the NiceGUI global error handler (resulting in a 500 error or server log). |
+| `pydantic.ValidationError` | Raised when input data fails schema validation. Caught in `EmployeeDialogManager.save_new()` and `save_changes()` to show user-friendly `ui.notify()` messages. |
 
 ---
 
@@ -193,7 +221,7 @@ To ensure test isolation, an in-memory SQLite database is used for each test ses
 
 - `test_services.py`: Validates CRUD operations (create, read, update, delete) within the service layer.
 - `test_schemas.py`: Validates data constraints (e.g., salary limits, name format) using Pydantic schemas.
-- `test_gui.py`: Contains tests for UI logic (if applicable).
+- `test_gui.py`: Contains unit tests for all 4 GUI components (EmployeeApp, DatabaseManager, EmployeeTableView, EmployeeDialogManager) using mocks for NiceGUI and database layers.
 
 ### Running Tests
 
