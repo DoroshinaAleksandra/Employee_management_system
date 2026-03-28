@@ -1,7 +1,7 @@
 """
 Tests for the GUI module (NiceGUI interface).
 """
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 import pytest
 from datetime import date
 from src.management_system.main import EmployeeApp, DatabaseManager, EmployeeTableView, EmployeeDialogManager
@@ -98,7 +98,7 @@ class TestEmployeeTableView:
     @patch.object(EmployeeService, 'get_all')
     def test_render_table_clears_container_before_render(self, mock_get_all, mock_ui):
         """
-        Verify that table container is cleared before re-rendering.
+        Verify that table container is cleared before re-rendering to prevent duplicate rows.
         """
         mock_get_all.return_value = []
         
@@ -123,8 +123,7 @@ class TestEmployeeDialogManager:
     """Tests for EmployeeDialogManager class."""
     
     @patch('src.management_system.main.ui')
-    @patch.object(EmployeeService, 'get_by_id')
-    def test_open_edit_dialog_fetches_employee(self, mock_get_by_id, mock_ui):
+    def test_open_edit_dialog_fetches_employee(self, mock_ui):
         """
         Verify that opening edit dialog fetches employee data by ID.
         """
@@ -137,7 +136,6 @@ class TestEmployeeDialogManager:
         mock_emp.timezone = "UTC+3"
         mock_emp.birth_date = None
         mock_emp.hire_date = None
-        mock_get_by_id.return_value = mock_emp
         
         mock_dialog = create_context_mock()
         mock_dialog.open = Mock()
@@ -152,9 +150,12 @@ class TestEmployeeDialogManager:
         mock_ui.label.return_value = Mock(classes=Mock(return_value=Mock()))
         mock_ui.row.return_value = create_context_mock()
         mock_ui.column.return_value = create_context_mock()
+
+        mock_service = MagicMock(spec=EmployeeService)
+        mock_service.get_by_id.return_value = mock_emp
         
         db_manager = Mock()
-        db_manager.get_service().get_by_id = mock_get_by_id
+        db_manager.get_service.return_value = mock_service
         
         dialog_manager = EmployeeDialogManager(
             db_manager=db_manager,
@@ -162,20 +163,21 @@ class TestEmployeeDialogManager:
         )
         dialog_manager.open_edit_dialog(1)
         
-        mock_get_by_id.assert_called_once_with(1)
+        mock_service.get_by_id.assert_called_once_with(1)
         mock_ui.dialog.assert_called_once()
     
     @patch('src.management_system.main.ui')
-    @patch.object(EmployeeService, 'get_by_id')
-    def test_open_edit_dialog_notifies_if_missing(self, mock_get_by_id, mock_ui):
+    def test_open_edit_dialog_notifies_if_missing(self, mock_ui):
         """
         Verify that editing non-existent employee shows a warning.
         """
-        mock_get_by_id.return_value = None
         mock_ui.notify = Mock()
+
+        mock_service = MagicMock(spec=EmployeeService)
+        mock_service.get_by_id.return_value = None
         
         db_manager = Mock()
-        db_manager.get_service().get_by_id = mock_get_by_id
+        db_manager.get_service.return_value = mock_service
         
         dialog_manager = EmployeeDialogManager(
             db_manager=db_manager,
