@@ -1,3 +1,10 @@
+"""
+Employee Management System - Main GUI Module.
+
+This module provides the main application interface for managing employee records.
+It uses NiceGUI for the web-based user interface and SQLAlchemy for database operations.
+"""
+
 from datetime import date
 from typing import Optional
 
@@ -57,7 +64,7 @@ class DatabaseManager:
         return self.service
 
 
-class EmployeeTableView:
+class EmployeeTableView:  # pylint: disable=too-few-public-methods
     """
     Displays the table with employees.
     """
@@ -140,7 +147,8 @@ class EmployeeDialogManager:
             inp_pos = ui.input(label='Должность').classes('w-full')
 
             with ui.row().classes('w-full gap-2'):
-                inp_salary = ui.number(label='Зарплата', value=0.0, format='%.2f').classes('col-grow')
+                inp_salary = ui.number(label='Зарплата', value=0.0, 
+                                       format='%.2f').classes('col-grow')
                 sel_currency = ui.select(
                     options=CURRENCIES,
                     label='Валюта',
@@ -171,7 +179,8 @@ class EmployeeDialogManager:
                             salary=inp_salary.value,
                             currency=sel_currency.value,
                             timezone=sel_tz.value,
-                            birth_date=date.fromisoformat(dt_birth.value) if dt_birth.value else None,
+                            birth_date=(date.fromisoformat(dt_birth.value)
+                                        if dt_birth.value else None),
                             hire_date=date.fromisoformat(dt_hire.value) if dt_hire.value else None,
                         )
                         self.db_manager.refresh_session()
@@ -209,7 +218,8 @@ class EmployeeDialogManager:
             inp_pos = ui.input(label='Должность', value=str(emp.position or '')).classes('w-full')
 
             with ui.row().classes('w-full gap-2'):
-                inp_salary = ui.number(label='Зарплата', value=float(emp.salary), format='%.2f').classes('col-grow')
+                inp_salary = ui.number(label='Зарплата',
+                                       value=float(emp.salary), format='%.2f').classes('col-grow')
                 sel_currency = ui.select(
                     options=CURRENCIES,
                     label='Валюта',
@@ -242,7 +252,8 @@ class EmployeeDialogManager:
                             salary=inp_salary.value,
                             currency=sel_currency.value,
                             timezone=sel_tz.value,
-                            birth_date=date.fromisoformat(dt_birth.value) if dt_birth.value else None,
+                            birth_date=(date.fromisoformat(dt_birth.value)
+                                        if dt_birth.value else None),
                             hire_date=date.fromisoformat(dt_hire.value) if dt_hire.value else None,
                         )
                         self.db_manager.refresh_session()
@@ -287,18 +298,32 @@ class EmployeeDialogManager:
         dialog.open()
 
 
-class EmployeeApp:
+class EmployeeApp:  # pylint: disable=too-few-public-methods
     """
     Builds an interface for the app.
     """
 
     def __init__(self):
+        """
+        Initialize the EmployeeApp.
+        
+        Creates a DatabaseManager instance and sets component references
+        to None. Components (table_view, dialog_manager) are initialized
+        in _build_ui() after the database is ready.
+        """
         self.db_manager = DatabaseManager()
         self.table_view = None
         self.dialog_manager = None
         self.table_container = None
 
     def run(self):
+        """
+        Start the application.
+        
+        Initializes the database, builds the user interface, and launches
+        the NiceGUI server. This is the main entry point for running the app.
+        Server runs on localhost:8080 without auto-reload.
+        """
         self.db_manager.initialize_db()
         self._build_ui()
         ui.run(
@@ -310,6 +335,14 @@ class EmployeeApp:
         )
 
     def _build_ui(self):
+        """
+        Build the main user interface layout.
+        
+        Creates the header, title, 'Add Employee' button, and initializes
+        the table container. Also instantiates EmployeeDialogManager and
+        EmployeeTableView with appropriate callbacks for user interactions.
+        Finally renders the initial employee table.
+        """
         with ui.header().classes('items-center justify-between'):
             ui.label('Management System').classes('text-h6 font-bold')
 
@@ -340,18 +373,44 @@ class EmployeeApp:
             self._render_table()
 
     def _render_table(self):
+        """
+        Render the employee table by delegating to EmployeeTableView.
+        
+        Calls the table_view.render() method if it exists. This method
+        is used as a callback when data changes (create, update, delete)
+        to refresh the displayed employee list.
+        """
         if self.table_view:
             self.table_view.render()
 
     def _open_create_dialog(self):
+        """
+        Open the create employee dialog.
+        
+        Delegates to EmployeeDialogManager.open_create_dialog() if the
+        dialog manager is initialized. Called when user clicks the
+        'Add Employee' button.
+        """
         if self.dialog_manager:
             self.dialog_manager.open_create_dialog()
 
     def _open_edit_dialog(self, emp_id):
+        """
+        Open the edit employee dialog for a specific employee.
+        
+        Args:
+            emp_id: The ID of the employee to edit.
+        """
         if self.dialog_manager:
             self.dialog_manager.open_edit_dialog(emp_id)
 
     def _confirm_delete(self, emp_id):
+        """
+        Open the delete confirmation dialog for a specific employee.
+        
+        Args:
+            emp_id: The ID of the employee to delete.
+        """
         if self.dialog_manager:
             self.dialog_manager.confirm_delete(emp_id)
 
