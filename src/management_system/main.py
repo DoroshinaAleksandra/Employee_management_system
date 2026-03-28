@@ -1,18 +1,15 @@
 from datetime import date
-import pydantic
 from typing import Optional
+
+import pydantic
 from nicegui import ui
 from sqlalchemy.orm import Session
 
-from .database import init_db, SessionLocal
+from .constants import (CURRENCIES, DEFAULT_CURRENCY, DEFAULT_TIMEZONE,
+                        TIMEZONES)
+from .database import SessionLocal, init_db
 from .schemas import EmployeeCreate
 from .services import EmployeeService
-from .constants import (
-    CURRENCIES,
-    TIMEZONES,
-    DEFAULT_CURRENCY,
-    DEFAULT_TIMEZONE,
-)
 
 
 class DatabaseManager:
@@ -21,20 +18,42 @@ class DatabaseManager:
     """
 
     def __init__(self):
+        """
+        Initialize the DatabaseManager.
+        
+        Sets up initial state with no active session or service.
+        Call initialize_db() before using to establish connection.
+        """
         self.db_session: Optional[Session] = None
         self.service: Optional[EmployeeService] = None
 
     def initialize_db(self):
+        """
+        Initialize the database and create the first session.
+        
+        This method should be called once at application startup.
+        It runs database migrations and establishes the initial session.
+        """
         init_db()
         self.refresh_session()
 
     def refresh_session(self):
+        """
+        Create a new database session, closing any existing one.
+        
+        Closes the current session if it exists to prevent resource leaks,
+        then creates a fresh session and initializes the EmployeeService.
+        Call this before database operations to ensure a valid connection.
+        """
         if self.db_session:
             self.db_session.close()
         self.db_session = SessionLocal()
         self.service = EmployeeService(self.db_session)
 
     def get_service(self):
+        """
+        Get the EmployeeService instance for data operations.
+        """
         return self.service
 
 
