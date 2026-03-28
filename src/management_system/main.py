@@ -147,7 +147,7 @@ class EmployeeDialogManager:
             inp_pos = ui.input(label='Должность').classes('w-full')
 
             with ui.row().classes('w-full gap-2'):
-                inp_salary = ui.number(label='Зарплата', value=0.0, 
+                inp_salary = ui.number(label='Зарплата', value=0.0,
                                        format='%.2f').classes('col-grow')
                 sel_currency = ui.select(
                     options=CURRENCIES,
