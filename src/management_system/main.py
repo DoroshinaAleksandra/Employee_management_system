@@ -1,88 +1,96 @@
+"""
+Employee Management System - Main GUI Module.
+
+This module provides the main application interface for managing employee records.
+It uses NiceGUI for the web-based user interface and SQLAlchemy for database operations.
+"""
+
 from datetime import date
-import pydantic
 from typing import Optional
+
+import pydantic
 from nicegui import ui
 from sqlalchemy.orm import Session
 
-from .database import init_db, SessionLocal
+from .constants import (CURRENCIES, DEFAULT_CURRENCY, DEFAULT_TIMEZONE,
+                        TIMEZONES)
+from .database import SessionLocal, init_db
 from .schemas import EmployeeCreate
 from .services import EmployeeService
-from .constants import (
-    CURRENCIES,
-    TIMEZONES,
-    DEFAULT_CURRENCY,
-    DEFAULT_TIMEZONE,
-)
 
 
-class EmployeeApp:
+class DatabaseManager:
     """
-    Builds an interface for the app.
+    Manages database connections and sessions.
     """
 
     def __init__(self):
+        """
+        Initialize the DatabaseManager.
+        
+        Sets up initial state with no active session or service.
+        Call initialize_db() before using to establish connection.
+        """
         self.db_session: Optional[Session] = None
         self.service: Optional[EmployeeService] = None
-        self.table_container = None
 
     def initialize_db(self):
+        """
+        Initialize the database and create the first session.
+        
+        This method should be called once at application startup.
+        It runs database migrations and establishes the initial session.
+        """
         init_db()
-        self._refresh_session()
+        self.refresh_session()
 
-    def _refresh_session(self):
+    def refresh_session(self):
+        """
+        Create a new database session, closing any existing one.
+        
+        Closes the current session if it exists to prevent resource leaks,
+        then creates a fresh session and initializes the EmployeeService.
+        Call this before database operations to ensure a valid connection.
+        """
         if self.db_session:
             self.db_session.close()
         self.db_session = SessionLocal()
         self.service = EmployeeService(self.db_session)
 
-    def run(self):
-        self.initialize_db()
-        self._build_ui()
-        ui.run(
-            title="Система управления сотрудниками",
-            host='127.0.0.1',
-            port=8080,
-            reload=False,
-            reconnect_timeout=0
-        )
-
-    def _build_ui(self):
+    def get_service(self):
         """
-        Builds the main user interface layout.
+        Get the EmployeeService instance for data operations.
         """
-        with ui.header().classes('items-center justify-between'):
-            ui.label('Management System').classes('text-h6 font-bold')
+        return self.service
 
-        with ui.column().classes('w-full items-center q-pa-md'):
-            ui.label('Управление персоналом').classes('text-h4 q-mb-md')
 
-            with ui.row().classes('w-full max-w-4xl justify-between items-center q-mb-lg'):
-                ui.button(
-                    'Добавить сотрудника',
-                    on_click=self._open_create_dialog,
-                    icon='add'
-                ).props('color=primary size=lg')
+class EmployeeTableView:  # pylint: disable=too-few-public-methods
+    """
+    Displays the table with employees.
+    """
 
-            self.table_container = ui.column().classes('w-full max-w-4xl')
+    def __init__(self, container, db_manager, on_edit_callback, on_delete_callback):
+        self.container = container
+        self.db_manager = db_manager
+        self.on_edit_callback = on_edit_callback
+        self.on_delete_callback = on_delete_callback
 
-            self._render_table()
-
-    def _render_table(self):
+    def render(self):
         """
         Renders the employee table with all records from the database.
         """
-        self._refresh_session()
-        employees = self.service.get_all()
+        self.db_manager.refresh_session()
+        employees = self.db_manager.get_service().get_all()
 
-        self.table_container.clear()
+        self.container.clear()
 
         if not employees:
-            with self.table_container:
+            with self.container:
                 ui.label('База данных пуста. Добавьте первого сотрудника!').classes(
                     'text-grey-7 text-center q-pa-md text-h6')
             return
 
-        with self.table_container:
+        with self.container:
             with ui.row().classes('w-full bg-grey-3 q-pa-sm rounded-top font-bold'):
                 ui.label('ID').classes('col-1')
                 ui.label('ФИО').classes('col-2')
@@ -108,13 +116,23 @@ class EmployeeApp:
                     with ui.column().classes('col-1'):
                         with ui.row().classes('gap-1 justify-center'):
                             ui.button('Редактировать',
-                                      on_click=lambda e, eid=emp.id: self._open_edit_dialog(eid)
+                                      on_click=lambda e, eid=emp.id: self.on_edit_callback(eid)
                                       ).props('flat color=blue size=sm')
                             ui.button('Удалить',
-                                      on_click=lambda e, eid=emp.id: self._confirm_delete(eid)
+                                      on_click=lambda e, eid=emp.id: self.on_delete_callback(eid)
                                       ).props('flat color=red size=sm')
 
-    def _open_create_dialog(self):
+
+class EmployeeDialogManager:
+    """
+    Manages all dialog windows (Create, Edit, Delete).
+    """
+
+    def __init__(self, db_manager, on_data_changed):
+        self.db_manager = db_manager
+        self.on_data_changed = on_data_changed
+
+    def open_create_dialog(self):
         """
         Opens the dialog for creating a new employee.
         """
@@ -129,7 +147,8 @@ class EmployeeApp:
             inp_pos = ui.input(label='Должность').classes('w-full')
 
             with ui.row().classes('w-full gap-2'):
-                inp_salary = ui.number(label='Зарплата', value=0.0, format='%.2f').classes('col-grow')
+                inp_salary = ui.number(label='Зарплата', value=0.0,
+                                       format='%.2f').classes('col-grow')
                 sel_currency = ui.select(
                     options=CURRENCIES,
                     label='Валюта',
@@ -160,14 +179,15 @@ class EmployeeApp:
                             salary=inp_salary.value,
                             currency=sel_currency.value,
                             timezone=sel_tz.value,
-                            birth_date=date.fromisoformat(dt_birth.value) if dt_birth.value else None,
+                            birth_date=(date.fromisoformat(dt_birth.value)
+                                        if dt_birth.value else None),
                             hire_date=date.fromisoformat(dt_hire.value) if dt_hire.value else None,
                         )
-                        self._refresh_session()
-                        self.service.create(data)
+                        self.db_manager.refresh_session()
+                        self.db_manager.get_service().create(data)
                         ui.notify('Сотрудник успешно добавлен!', type='positive', icon='check')
                         dialog.close()
-                        self._render_table()
+                        self.on_data_changed()
                     except pydantic.ValidationError as e:
                         ui.notify(f'Ошибка данных: {str(e)}', type='negative', icon='error')
 
@@ -175,17 +195,18 @@ class EmployeeApp:
 
         dialog.open()
 
-    def _open_edit_dialog(self, emp_id: int):
+    def open_edit_dialog(self, emp_id):
         """
         Opens the dialog for editing an existing employee.
 
         Args: emp_id: The ID of the employee to edit.
         """
-        self._refresh_session()
-        if not isinstance(self.service, EmployeeService):
+        self.db_manager.refresh_session()
+
+        if not isinstance(self.db_manager.get_service(), EmployeeService):
             ui.notify('Проблемы с сервисом', type='negative', icon='error')
             return
-        emp = self.service.get_by_id(emp_id)
+        emp = self.db_manager.get_service().get_by_id(emp_id)
         if not emp:
             ui.notify('Сотрудник не найден', type='warning')
             return
@@ -197,7 +218,8 @@ class EmployeeApp:
             inp_pos = ui.input(label='Должность', value=str(emp.position or '')).classes('w-full')
 
             with ui.row().classes('w-full gap-2'):
-                inp_salary = ui.number(label='Зарплата', value=float(emp.salary), format='%.2f').classes('col-grow')
+                inp_salary = ui.number(label='Зарплата',
+                                       value=float(emp.salary), format='%.2f').classes('col-grow')
                 sel_currency = ui.select(
                     options=CURRENCIES,
                     label='Валюта',
@@ -230,15 +252,16 @@ class EmployeeApp:
                             salary=inp_salary.value,
                             currency=sel_currency.value,
                             timezone=sel_tz.value,
-                            birth_date=date.fromisoformat(dt_birth.value) if dt_birth.value else None,
+                            birth_date=(date.fromisoformat(dt_birth.value)
+                                        if dt_birth.value else None),
                             hire_date=date.fromisoformat(dt_hire.value) if dt_hire.value else None,
                         )
-                        self._refresh_session()
-                        updated = self.service.update(emp_id, data)
+                        self.db_manager.refresh_session()
+                        updated = self.db_manager.get_service().update(emp_id, data)
                         if updated:
                             ui.notify('Данные обновлены!', type='positive', icon='check')
                             dialog.close()
-                            self._render_table()
+                            self.on_data_changed()
                         else:
                             ui.notify('Не удалось обновить', type='negative')
                     except pydantic.ValidationError as e:
@@ -248,7 +271,7 @@ class EmployeeApp:
 
         dialog.open()
 
-    def _confirm_delete(self, emp_id: int):
+    def confirm_delete(self, emp_id):
         """
         Open confirmation dialog for deleting an employee.
 
@@ -262,10 +285,10 @@ class EmployeeApp:
                 ui.button('Нет', on_click=dialog.close).props('outline')
 
                 def do_delete():
-                    self._refresh_session()
-                    if self.service.delete(emp_id):
+                    self.db_manager.refresh_session()
+                    if self.db_manager.get_service().delete(emp_id):
                         ui.notify('Сотрудник удален', type='info', icon='delete')
-                        self._render_table()
+                        self.on_data_changed()
                     else:
                         ui.notify('Ошибка при удалении', type='negative')
                     dialog.close()
@@ -273,6 +296,123 @@ class EmployeeApp:
                 ui.button('Да, удалить', on_click=do_delete).props('color=red flat')
 
         dialog.open()
+
+
+class EmployeeApp:  # pylint: disable=too-few-public-methods
+    """
+    Builds an interface for the app.
+    """
+
+    def __init__(self):
+        """
+        Initialize the EmployeeApp.
+        
+        Creates a DatabaseManager instance and sets component references
+        to None. Components (table_view, dialog_manager) are initialized
+        in _build_ui() after the database is ready.
+        """
+        self.db_manager = DatabaseManager()
+        self.table_view = None
+        self.dialog_manager = None
+        self.table_container = None
+
+    def run(self):
+        """
+        Start the application.
+        
+        Initializes the database, builds the user interface, and launches
+        the NiceGUI server. This is the main entry point for running the app.
+        Server runs on localhost:8080 without auto-reload.
+        """
+        self.db_manager.initialize_db()
+        self._build_ui()
+        ui.run(
+            title="Система управления сотрудниками",
+            host='127.0.0.1',
+            port=8080,
+            reload=False,
+            reconnect_timeout=0
+        )
+
+    def _build_ui(self):
+        """
+        Build the main user interface layout.
+        
+        Creates the header, title, 'Add Employee' button, and initializes
+        the table container. Also instantiates EmployeeDialogManager and
+        EmployeeTableView with appropriate callbacks for user interactions.
+        Finally renders the initial employee table.
+        """
+        with ui.header().classes('items-center justify-between'):
+            ui.label('Management System').classes('text-h6 font-bold')
+
+        with ui.column().classes('w-full items-center q-pa-md'):
+            ui.label('Управление персоналом').classes('text-h4 q-mb-md')
+
+            with ui.row().classes('w-full max-w-4xl justify-between items-center q-mb-lg'):
+                ui.button(
+                    'Добавить сотрудника',
+                    on_click=self._open_create_dialog,
+                    icon='add'
+                ).props('color=primary size=lg')
+
+            self.table_container = ui.column().classes('w-full max-w-4xl')
+
+            self.dialog_manager = EmployeeDialogManager(
+                db_manager=self.db_manager,
+                on_data_changed=self._render_table
+            )
+
+            self.table_view = EmployeeTableView(
+                container=self.table_container,
+                db_manager=self.db_manager,
+                on_edit_callback=self._open_edit_dialog,
+                on_delete_callback=self._confirm_delete
+            )
+
+            self._render_table()
+
+    def _render_table(self):
+        """
+        Render the employee table by delegating to EmployeeTableView.
+        
+        Calls the table_view.render() method if it exists. This method
+        is used as a callback when data changes (create, update, delete)
+        to refresh the displayed employee list.
+        """
+        if self.table_view:
+            self.table_view.render()
+
+    def _open_create_dialog(self):
+        """
+        Open the create employee dialog.
+        
+        Delegates to EmployeeDialogManager.open_create_dialog() if the
+        dialog manager is initialized. Called when user clicks the
+        'Add Employee' button.
+        """
+        if self.dialog_manager:
+            self.dialog_manager.open_create_dialog()
+
+    def _open_edit_dialog(self, emp_id):
+        """
+        Open the edit employee dialog for a specific employee.
+        
+        Args:
+            emp_id: The ID of the employee to edit.
+        """
+        if self.dialog_manager:
+            self.dialog_manager.open_edit_dialog(emp_id)
+
+    def _confirm_delete(self, emp_id):
+        """
+        Open the delete confirmation dialog for a specific employee.
+        
+        Args:
+            emp_id: The ID of the employee to delete.
+        """
+        if self.dialog_manager:
+            self.dialog_manager.confirm_delete(emp_id)
 
 
 if __name__ == "__main__":
